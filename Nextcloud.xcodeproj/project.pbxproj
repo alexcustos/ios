@@ -98,6 +98,9 @@
 		F70A630B1D5B3467004E2AA5 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F70A63061D5B3467004E2AA5 /* libcrypto.a */; };
 		F70A630F1D5B3467004E2AA5 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F70A63071D5B3467004E2AA5 /* libssl.a */; };
 		F70CAE3A1F8CF31A008125FD /* NCEndToEndEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = F70CAE391F8CF31A008125FD /* NCEndToEndEncryption.m */; };
+		F7106E08203DB46100722BFD /* FileProviderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E05203DB46000722BFD /* FileProviderManager.swift */; };
+		F7106E09203DB46100722BFD /* FileProviderEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E06203DB46100722BFD /* FileProviderEnumerator.swift */; };
+		F7106E0A203DB46100722BFD /* FileProviderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E07203DB46100722BFD /* FileProviderItem.swift */; };
 		F710E8101EF95C9C00DC2427 /* CCIntro.m in Sources */ = {isa = PBXBuildFile; fileRef = F710E80E1EF95C9C00DC2427 /* CCIntro.m */; };
 		F710E8111EF95C9C00DC2427 /* ImagesIntro.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F710E80F1EF95C9C00DC2427 /* ImagesIntro.xcassets */; };
 		F71459B81D12E3B700CAFEEC /* CCError.m in Sources */ = {isa = PBXBuildFile; fileRef = F76C3B881C638A4C00DC4301 /* CCError.m */; };
@@ -755,6 +758,9 @@
 		F70F05261C889184008DAB36 /* Reachability.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Reachability.m; sourceTree = "<group>"; };
 		F70F05571C889184008DAB36 /* UIImage+animatedGIF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "UIImage+animatedGIF.h"; sourceTree = "<group>"; };
 		F70F05581C889184008DAB36 /* UIImage+animatedGIF.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIImage+animatedGIF.m"; sourceTree = "<group>"; };
+		F7106E05203DB46000722BFD /* FileProviderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderManager.swift; sourceTree = "<group>"; };
+		F7106E06203DB46100722BFD /* FileProviderEnumerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderEnumerator.swift; sourceTree = "<group>"; };
+		F7106E07203DB46100722BFD /* FileProviderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderItem.swift; sourceTree = "<group>"; };
 		F710E80D1EF95C9C00DC2427 /* CCIntro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CCIntro.h; sourceTree = "<group>"; };
 		F710E80E1EF95C9C00DC2427 /* CCIntro.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CCIntro.m; sourceTree = "<group>"; };
 		F710E80F1EF95C9C00DC2427 /* ImagesIntro.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ImagesIntro.xcassets; sourceTree = "<group>"; };
@@ -2132,6 +2138,9 @@
 		F74344211E1264EE001CC831 /* PickerFileProvider */ = {
 			isa = PBXGroup;
 			children = (
+				F7106E06203DB46100722BFD /* FileProviderEnumerator.swift */,
+				F7106E07203DB46100722BFD /* FileProviderItem.swift */,
+				F7106E05203DB46000722BFD /* FileProviderManager.swift */,
 				F7F54CAB1E5AFF1E00E19C62 /* PickerFileProvider-Bridging-Header.h */,
 				F74344241E1264EE001CC831 /* FileProvider.swift */,
 			);
@@ -3717,6 +3726,7 @@
 				F7F878B11FB9E3B900599E4F /* NCEndToEndMetadata.swift in Sources */,
 				F7BB50F71F2239BF00C47094 /* BKPasscodeLockScreenManager.m in Sources */,
 				F7BB50DB1F2238A900C47094 /* OCXMLShareByLinkParser.m in Sources */,
+				F7106E08203DB46100722BFD /* FileProviderManager.swift in Sources */,
 				F7BB50E21F2238D000C47094 /* AFURLRequestSerialization.m in Sources */,
 				F7BB50BC1F22375D00C47094 /* CCBKPasscode.m in Sources */,
 				F7BB50D81F2238A000C47094 /* OCXMLListParser.m in Sources */,
@@ -3733,6 +3743,7 @@
 				F7BB50D61F22389900C47094 /* OCHTTPRequestOperation.m in Sources */,
 				F75131661FA5EFF4002BB4D1 /* NCNetworkingSync.m in Sources */,
 				F7BB50BD1F22376000C47094 /* CCCertificate.m in Sources */,
+				F7106E0A203DB46100722BFD /* FileProviderItem.swift in Sources */,
 				F7BB50DA1F2238A600C47094 /* OCXMLServerErrorsParser.m in Sources */,
 				F7BB50C51F22379B00C47094 /* NSNotificationCenter+MainThread.m in Sources */,
 				F7BB50D71F22389C00C47094 /* OCWebDAVClient.m in Sources */,
@@ -3759,6 +3770,7 @@
 				F7BB50EB1F22391000C47094 /* MBProgressHUD.m in Sources */,
 				F7BB50D21F22388B00C47094 /* OCShareUser.m in Sources */,
 				F7BB50F31F22396300C47094 /* UIImage+animatedGIF.m in Sources */,
+				F7106E09203DB46100722BFD /* FileProviderEnumerator.swift in Sources */,
 				F7BB50C21F22379100C47094 /* CCGraphics.m in Sources */,
 				F7BB50E11F2238CD00C47094 /* AFSecurityPolicy.m in Sources */,
 				F7BB50B01F22370600C47094 /* NCDatabase.swift in Sources */,
