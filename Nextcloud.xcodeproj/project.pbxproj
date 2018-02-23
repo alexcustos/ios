@@ -101,6 +101,9 @@
 		F7106E08203DB46100722BFD /* FileProviderManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E05203DB46000722BFD /* FileProviderManager.swift */; };
 		F7106E09203DB46100722BFD /* FileProviderEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E06203DB46100722BFD /* FileProviderEnumerator.swift */; };
 		F7106E0A203DB46100722BFD /* FileProviderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E07203DB46100722BFD /* FileProviderItem.swift */; };
+		F7106E22203DC5DA00722BFD /* DirectoryEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E21203DC5DA00722BFD /* DirectoryEnumerator.swift */; };
+		F7106E24203DC5FA00722BFD /* FolderProviderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E23203DC5FA00722BFD /* FolderProviderItem.swift */; };
+		F7106E26203DC60200722BFD /* RootContainerEnumerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7106E25203DC60100722BFD /* RootContainerEnumerator.swift */; };
 		F710E8101EF95C9C00DC2427 /* CCIntro.m in Sources */ = {isa = PBXBuildFile; fileRef = F710E80E1EF95C9C00DC2427 /* CCIntro.m */; };
 		F710E8111EF95C9C00DC2427 /* ImagesIntro.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F710E80F1EF95C9C00DC2427 /* ImagesIntro.xcassets */; };
 		F71459B81D12E3B700CAFEEC /* CCError.m in Sources */ = {isa = PBXBuildFile; fileRef = F76C3B881C638A4C00DC4301 /* CCError.m */; };
@@ -761,6 +764,9 @@
 		F7106E05203DB46000722BFD /* FileProviderManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderManager.swift; sourceTree = "<group>"; };
 		F7106E06203DB46100722BFD /* FileProviderEnumerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderEnumerator.swift; sourceTree = "<group>"; };
 		F7106E07203DB46100722BFD /* FileProviderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileProviderItem.swift; sourceTree = "<group>"; };
+		F7106E21203DC5DA00722BFD /* DirectoryEnumerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DirectoryEnumerator.swift; sourceTree = "<group>"; };
+		F7106E23203DC5FA00722BFD /* FolderProviderItem.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolderProviderItem.swift; sourceTree = "<group>"; };
+		F7106E25203DC60100722BFD /* RootContainerEnumerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootContainerEnumerator.swift; sourceTree = "<group>"; };
 		F710E80D1EF95C9C00DC2427 /* CCIntro.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CCIntro.h; sourceTree = "<group>"; };
 		F710E80E1EF95C9C00DC2427 /* CCIntro.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CCIntro.m; sourceTree = "<group>"; };
 		F710E80F1EF95C9C00DC2427 /* ImagesIntro.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ImagesIntro.xcassets; sourceTree = "<group>"; };
@@ -2138,11 +2144,14 @@
 		F74344211E1264EE001CC831 /* PickerFileProvider */ = {
 			isa = PBXGroup;
 			children = (
+				F7106E21203DC5DA00722BFD /* DirectoryEnumerator.swift */,
+				F74344241E1264EE001CC831 /* FileProvider.swift */,
 				F7106E06203DB46100722BFD /* FileProviderEnumerator.swift */,
 				F7106E07203DB46100722BFD /* FileProviderItem.swift */,
 				F7106E05203DB46000722BFD /* FileProviderManager.swift */,
+				F7106E23203DC5FA00722BFD /* FolderProviderItem.swift */,
+				F7106E25203DC60100722BFD /* RootContainerEnumerator.swift */,
 				F7F54CAB1E5AFF1E00E19C62 /* PickerFileProvider-Bridging-Header.h */,
-				F74344241E1264EE001CC831 /* FileProvider.swift */,
 			);
 			path = PickerFileProvider;
 			sourceTree = "<group>";
@@ -3714,6 +3723,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F7BB50D91F2238A300C47094 /* OCXMLParser.m in Sources */,
+				F7106E26203DC60200722BFD /* RootContainerEnumerator.swift in Sources */,
 				F7BB50D11F22388900C47094 /* OCSharedDto.m in Sources */,
 				F7BB50CB1F22386900C47094 /* OCCommunication.m in Sources */,
 				F7BB50D31F22388E00C47094 /* OCUserProfile.m in Sources */,
@@ -3724,6 +3734,7 @@
 				F7BB50CC1F22387900C47094 /* OCExternalSites.m in Sources */,
 				F7BB50EA1F2238FB00C47094 /* UIScrollView+EmptyDataSet.m in Sources */,
 				F7F878B11FB9E3B900599E4F /* NCEndToEndMetadata.swift in Sources */,
+				F7106E22203DC5DA00722BFD /* DirectoryEnumerator.swift in Sources */,
 				F7BB50F71F2239BF00C47094 /* BKPasscodeLockScreenManager.m in Sources */,
 				F7BB50DB1F2238A900C47094 /* OCXMLShareByLinkParser.m in Sources */,
 				F7106E08203DB46100722BFD /* FileProviderManager.swift in Sources */,
@@ -3737,6 +3748,7 @@
 				F7BB50C91F22386400C47094 /* OCActivity.m in Sources */,
 				F7BB50AF1F22370300C47094 /* NCManageDatabase.swift in Sources */,
 				F7BB50FA1F2239CB00C47094 /* BKTouchIDManager.m in Sources */,
+				F7106E24203DC5FA00722BFD /* FolderProviderItem.swift in Sources */,
 				F7BB50BB1F22374E00C47094 /* OCNetworking.m in Sources */,
 				F7BB50C11F22378E00C47094 /* CCHud.m in Sources */,
 				F7BB50DE1F2238B700C47094 /* UtilsFramework.m in Sources */,

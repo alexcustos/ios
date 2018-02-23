@@ -1,216 +1,284 @@
 //
-//  FileProvider.swift
-//  PickerFileProvider
+//  OCFileProvider.swift
+//  ownCloudExtAppFileProvider
 //
-//  Created by Marino Faggiana on 27/12/16.
-//  Copyright © 2017 TWS. All rights reserved.
-//
-//  Author Marino Faggiana <m.faggiana@twsweb.it>
-//
-//  This program is free software: you can redistribute it and/or modify
-//  it under the terms of the GNU General Public License as published by
-//  the Free Software Foundation, either version 3 of the License, or
-//  (at your option) any later version.
-//
-//  This program is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-//  GNU General Public License for more details.
-//
-//  You should have received a copy of the GNU General Public License
-//  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+//  Created by Pablo Carrascal on 03/11/2017.
 //
 
 import UIKit
+import MobileCoreServices
 
-class FileProvider: NSFileProviderExtension, CCNetworkingDelegate {
+@available(iOSApplicationExtension 11.0, *)
 
-    lazy var networkingOperationQueue: OperationQueue = {
+class FileProvider: NSFileProviderExtension {
+    
+    // This is our file provider manager, it handles things like placeholders on disk
+    var fileProviderManager: NSFileProviderManager!
+    var fileManager: FileManager!
+    
+    var activeAccount: String = ""
+    var activeUrl: String = ""
+    var activeUser: String = ""
+    var activeUserID: String = ""
+    var activePassword: String = ""
+    var directoryUser: String = ""
+    
+    var serverUrl: String = ""
+    var directoryID: String = ""
+    
+    override init() {
+        print("FileProviderExtension is being created")
+        super.init()
         
-        var queue = OperationQueue()
-        queue.name = k_queue
-        queue.maxConcurrentOperationCount = 10
+        let record = NCManageDatabase.sharedInstance.getAccountActive()!
         
-        return queue
-    }()
+        //let userLocalPath: String = CCUtility.getDirectoryActiveUser(activeUser, activeUrl: activeUrl)
+        
+        activeAccount = record.account
+        activePassword = record.password
+        activeUrl = record.url
+        activeUser = record.user
+        activeUserID = record.userID
+        directoryUser = CCUtility.getDirectoryActiveUser(activeUser, activeUrl: activeUrl)
+        serverUrl = CCUtility.getHomeServerUrlActiveUrl(activeUser)
+        directoryID = NCManageDatabase.sharedInstance.getDirectoryID(serverUrl)!
+        
+        //let currentUserDomain: NSFileProviderDomain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier(String(activeUserID)) , displayName: activeUser, pathRelativeToDocumentStorage: userLocalPath)
+        
+        self.fileProviderManager = NSFileProviderManager.default
 
-    var fileCoordinator: NSFileCoordinator {
+        self.fileManager = FileManager()
+    }
+    
+    deinit {
+        print("FileProviderExtension is being deallocated")
+    }
+    
+    override func persistentIdentifierForItem(at url: URL) -> NSFileProviderItemIdentifier? {
+        
+        // resolve the given URL to a persistent identifier using a database
+        let pathComponents = url.pathComponents
+        
+        // exploit the fact that the path structure has been defined as
+        // <base storage directory>/<item identifier>/<item file name> above
+        assert(pathComponents.count > 2)
+        
+        let itemIdentifier = NSFileProviderItemIdentifier(pathComponents[pathComponents.count - 2])
+        return itemIdentifier
+    }
+    
+    override func urlForItem(withPersistentIdentifier identifier: NSFileProviderItemIdentifier) -> URL? {
+        
+        guard let item = try? item(for: identifier) else {
+            return nil
+        }
+        
+        //TODO: Change the scheme to the OC scheme.
+        let manager = NSFileProviderManager.default
+        let perItemDirectory = manager.documentStorageURL.appendingPathComponent(identifier.rawValue, isDirectory: true)
+        
+        var finalPath: URL
+        print("LOG ---> name = \(item.filename.removingPercentEncoding!) = \(item.typeIdentifier)")
+        if item.typeIdentifier == (kUTTypeFolder as String) {
+            finalPath = perItemDirectory.appendingPathComponent(item.filename, isDirectory:true)
+        } else {
+            finalPath = perItemDirectory.appendingPathComponent(item.filename, isDirectory:false)
+        }
+
+        return finalPath
+    }
+    
+    override func item(for identifier: NSFileProviderItemIdentifier) throws -> NSFileProviderItem {
+        
+        if identifier == .rootContainer {
+            
+            let recordsTableMetadata = NCManageDatabase.sharedInstance.getMetadatas(predicate: NSPredicate(format: "account = %@ AND directoryID = %@", activeAccount, directoryID), sorted: "fileName", ascending: true)
+        
+            //let rootFolder = ManageFilesDB.getRootFileDto(byUser: activeUser)
+
+            return FolderProviderItem(directory: rootFolder!, root: true)
+        }
+        //print("LOG ---> identifier value = \(Int(identifier.rawValue))")
+        
+        if let fileDTO: FileDto = ManageFilesDB.getFileDto(byIdFile: Int(identifier.rawValue)!) {
+            
+            print("LOG ---> fileDTO \(fileDTO.fileName) fileDTOPercentage \(fileDTO.fileName.removingPercentEncoding!)")
+            
+            if fileDTO.isDirectory {
+                return FolderProviderItem(directory: fileDTO, root: false)
+            } else {
+                return FileProviderItem(ocFile: fileDTO)
+            }
+        } else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError, userInfo:[:])
+        }
+    }
+    
+    override func itemChanged(at url: URL) {
+        print("LOG ---> itemchanged")
+    }
+    
+    override func providePlaceholder(at url: URL, completionHandler: @escaping (Error?) -> Void) {
+        
+        guard let identifier = persistentIdentifierForItem(at: url) else {
+            completionHandler(NSFileProviderError(.noSuchItem))
+            return
+        }
+        
+        let fileName:String = url.lastPathComponent
+
+        var formedURL: URL = self.fileProviderManager.documentStorageURL.appendingPathComponent(identifier.rawValue, isDirectory: true)
+        formedURL.appendPathComponent(fileName, isDirectory: false)
+        
+        do {
+            let fileProviderItem = try item(for: identifier)
+
+            let placeholderURL = NSFileProviderManager.placeholderURL(for: url)
+            let placecholderDirectoryUrl = placeholderURL.deletingLastPathComponent()
+            var createDirectoryError:Error?
+            
+            if (!fileManager.fileExists(atPath: placecholderDirectoryUrl.absoluteString)) {
+                var fcError: NSError?
+                self.fileCoordinator().coordinate(writingItemAt: placecholderDirectoryUrl, options: NSFileCoordinator.WritingOptions(rawValue: 0), error: &fcError
+                    , byAccessor: { (newUrl) in
+                        do {
+                            createDirectoryError = fcError;
+                            if (fcError == nil) {
+                                try fileManager.createDirectory(at: newUrl, withIntermediateDirectories: true, attributes: nil)
+                            }
+                        } catch let fmError {
+                            NSLog("createError = %@", fmError.localizedDescription)
+                            createDirectoryError = fmError
+                        }
+                })
+            }
+            
+            if let placeholderError = createDirectoryError {
+                throw placeholderError
+            }
+            else {
+                NSLog("placeholderURL = %@", placeholderURL.absoluteString)
+                try NSFileProviderManager.writePlaceholder(at: placeholderURL,
+                                                           withMetadata: fileProviderItem)
+                completionHandler(nil)
+            }
+            
+        } catch let error {
+            NSLog("writePlaceholder error = %@", error.localizedDescription)
+            completionHandler(error)
+        }
+    }
+    
+    func fileCoordinator() -> NSFileCoordinator {
         let fileCoordinator = NSFileCoordinator()
         fileCoordinator.purposeIdentifier = self.providerIdentifier
         return fileCoordinator
     }
     
-    override init() {
-        super.init()
+    override func startProvidingItem(at url: URL, completionHandler: @escaping (Error?) -> Void) {
         
-        self.fileCoordinator.coordinate(writingItemAt: self.documentStorageURL, options: [], error: nil, byAccessor: { newURL in
-            // ensure the documentStorageURL actually exists
-            do {
-                try FileManager.default.createDirectory(at: newURL, withIntermediateDirectories: true, attributes: nil)
-            } catch {
-                // Handle error
-            }
-        })
-    }
-    
-    override func providePlaceholder(at url: URL, completionHandler: ((_ error: Error?) -> Void)?) {
-        // Should call writePlaceholderAtURL(_:withMetadata:error:) with the placeholder URL, then call the completion handler with the error if applicable.
-        let fileName = url.lastPathComponent
-        
-        let placeholderURL = NSFileProviderExtension.placeholderURL(for: self.documentStorageURL.appendingPathComponent(fileName))
-        
-        // TODO: get file size for file at <url> from model
-        let fileSize = 0
-        let metadata = [AnyHashable(URLResourceKey.fileSizeKey): fileSize]
-        do {
-            try NSFileProviderExtension.writePlaceholder(at: placeholderURL, withMetadata: metadata as! [URLResourceKey : Any])
-        } catch {
-            // Handle error
-        }
-        
-        completionHandler?(nil)
-    }
-    
-    override func startProvidingItem(at url: URL, completionHandler: ((_ error: Error?) -> Void)?) {
-        
-        guard let fileData = try? Data(contentsOf: url) else {
-            // NOTE: you would generate an NSError to supply to the completionHandler
-            // here however that is outside of the scope for this tutorial
-            completionHandler?(nil)
-            return
-        }
-        
-        do {
-            _ = try fileData.write(to: url, options: NSData.WritingOptions())
-            completionHandler?(nil)
-        } catch let error as NSError {
-            print("error writing file to URL")
-            completionHandler?(error)
-        }
-    }
-    
-    override func itemChanged(at url: URL) {
-        
-        // Called at some point after the file has changed; the provider may then trigger an upload
-                
-        let fileSize = (try! FileManager.default.attributesOfItem(atPath: url.path)[FileAttributeKey.size] as! NSNumber).uint64Value
-        NSLog("[LOG] Item changed at URL %@ %lu", url as NSURL, fileSize)
+        print("LOG --->startproviding")
 
-        guard let account = NCManageDatabase.sharedInstance.getAccountActive() else {
-            self.stopProvidingItem(at: url)
-            return
-        }
-        guard let fileName = CCUtility.getFileNameExt() else {
-            self.stopProvidingItem(at: url)
-            return
-        }
-        // -------> Fix : Clear FileName for twice Office 365
-        CCUtility.setFileNameExt("")
-        // --------------------------------------------------
-        if (fileName != url.lastPathComponent) {
-            self.stopProvidingItem(at: url)
-            return
-        }
-        guard let serverUrl = CCUtility.getServerUrlExt() else {
-            self.stopProvidingItem(at: url)
-            return
-        }
-        guard let directoryID = NCManageDatabase.sharedInstance.getDirectoryID(serverUrl) else {
-            self.stopProvidingItem(at: url)
-            return
-        }
-        
-        let metadata = NCManageDatabase.sharedInstance.getMetadata(predicate: NSPredicate(format: "fileName == %@ AND directoryID == %@", fileName, directoryID))
-        if metadata != nil {
-            
-            // Update
-            let uploadID = k_uploadSessionID + CCUtility.createRandomString(16)
-            let directoryUser = CCUtility.getDirectoryActiveUser(account.user, activeUrl: account.url)
-            let destinationDirectoryUser = "\(directoryUser!)/\(uploadID)"
-            
-            // copy sourceURL on directoryUser
-            do {
-                try FileManager.default.removeItem(atPath: destinationDirectoryUser)
-            } catch _ {
-                print("file do not exists")
-            }
-            
-            do {
-                try FileManager.default.copyItem(atPath: url.path, toPath: destinationDirectoryUser)
-            } catch _ {
-                print("file do not exists")
-                self.stopProvidingItem(at: url)
-                return
-            }
-
-            // Prepare for send Metadata
-            metadata!.sessionID = uploadID
-            metadata!.session = k_upload_session
-            metadata!.sessionTaskIdentifier = Int(k_taskIdentifierWaitStart)
-            _ = NCManageDatabase.sharedInstance.updateMetadata(metadata!)
-            
-        } else {
-            
-            // New
-            let directoryUser = CCUtility.getDirectoryActiveUser(account.user, activeUrl: account.url)
-            let destinationDirectoryUser = "\(directoryUser!)/\(fileName)"
-            
-            do {
-                try FileManager.default.removeItem(atPath: destinationDirectoryUser)
-            } catch _ {
-                print("file do not exists")
-            }
-            do {
-                try FileManager.default.copyItem(atPath: url.path, toPath: destinationDirectoryUser)
-            } catch _ {
-                print("file do not exists")
-                self.stopProvidingItem(at: url)
-                return
-            }
-            
-            CCNetworking.shared().uploadFile(fileName, serverUrl: serverUrl, session: k_upload_session, taskStatus: Int(k_taskStatusResume), selector: nil, selectorPost: nil, errorCode: 0, delegate: self)
-        }
-
-        self.stopProvidingItem(at: url)
     }
     
     override func stopProvidingItem(at url: URL) {
-        // Called after the last claim to the file has been released. At this point, it is safe for the file provider to remove the content file.
-        // Care should be taken that the corresponding placeholder file stays behind after the content file has been deleted.
-        
-        do {
-            _ = try FileManager.default.removeItem(at: url)
-        } catch {
-            // Handle error
-        }
-        self.providePlaceholder(at: url, completionHandler: { error in
-            // TODO: handle any error, do any necessary cleanup
-        })
+        print("LOG --->stopproviding")
     }
     
-    // UTILITY //
+    override func createDirectory(withName directoryName: String, inParentItemIdentifier parentItemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG --->createdirectory")
+        completionHandler(nil, nil)
+    }
     
-    func appGroupContainerURL() -> URL? {
+    override func deleteItem(withIdentifier itemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (Error?) -> Void) {
+        print("LOG --->delete")
+        completionHandler(nil)
+    }
+    
+    override func importDocument(at fileURL: URL, toParentItemIdentifier parentItemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG --->import")
+        completionHandler(nil, nil)
+
+    }
+    
+    override func renameItem(withIdentifier itemIdentifier: NSFileProviderItemIdentifier, toName itemName: String, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG ---> rename")
+        completionHandler(nil, nil)
+    }
+    
+    override func setFavoriteRank(_ favoriteRank: NSNumber?, forItemIdentifier itemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG --->setfavourite")
+        completionHandler(nil, nil)
+    }
+    
+    override func setLastUsedDate(_ lastUsedDate: Date?, forItemIdentifier itemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG --->setLastUsedDate")
+        completionHandler(nil, nil)
+    }
+    
+    override func setTagData(_ tagData: Data?, forItemIdentifier itemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG ---> setTagData")
+        completionHandler(nil, nil)
+    }
+    
+    override func trashItem(withIdentifier itemIdentifier: NSFileProviderItemIdentifier, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG ---> trashitem")
+        completionHandler(nil, nil)
+    }
+    
+    override func untrashItem(withIdentifier itemIdentifier: NSFileProviderItemIdentifier, toParentItemIdentifier parentItemIdentifier: NSFileProviderItemIdentifier?, completionHandler: @escaping (NSFileProviderItem?, Error?) -> Void) {
+        print("LOG ---> untrashitem")
+        completionHandler(nil, nil)
+    }
+    
+    override func fetchThumbnails(for itemIdentifiers: [NSFileProviderItemIdentifier], requestedSize size: CGSize, perThumbnailCompletionHandler: @escaping (NSFileProviderItemIdentifier, Data?, Error?) -> Void, completionHandler: @escaping (Error?) -> Void) -> Progress {
+    
+        let progress = Progress(totalUnitCount: Int64(itemIdentifiers.count))
         
-        guard let groupURL = FileManager.default
-            .containerURL(forSecurityApplicationGroupIdentifier: NCBrandOptions.sharedInstance.capabilitiesGroups) else {
-                return nil
+        let image = UIImage(named: "doc_icon")
+        let imagePNG = UIImagePNGRepresentation(image!) as! Data
+        
+        for item in itemIdentifiers {
+            perThumbnailCompletionHandler(item, imagePNG, nil)
         }
         
-        let storagePathUrl = groupURL.appendingPathComponent("File Provider Storage")
-        let storagePath = storagePathUrl.path
+        return progress
+
+    }
+    
+    override func enumerator(for containerItemIdentifier: NSFileProviderItemIdentifier) throws -> NSFileProviderEnumerator {
+        print("LOG ---> enumerator")
+        var maybeEnumerator: NSFileProviderEnumerator? = nil
         
-        if !FileManager.default.fileExists(atPath: storagePath) {
-            do {
-                try FileManager.default.createDirectory(atPath: storagePath, withIntermediateDirectories: false, attributes: nil)
-            } catch let error {
-                print("error creating filepath: \(error)")
-                return nil
+        print("LOG ---> containerItemIdentifier \(containerItemIdentifier)")
+        switch containerItemIdentifier {
+                case .rootContainer:
+                maybeEnumerator = RootContainerEnumerator(enumeratedItemIdentifier: containerItemIdentifier)
+                case .workingSet:
+                // TODO: instantiate an enumerator for the working set
+                maybeEnumerator = DirectoryEnumerator(enumeratedItemIdentifier: containerItemIdentifier)
+                default:
+                    do{
+                        let item = try self.item(for: containerItemIdentifier)
+                        
+                        if item.typeIdentifier == kUTTypeFolder as String {
+                            // - for a directory, instantiate an enumerator of its subitems
+                            maybeEnumerator = DirectoryEnumerator(enumeratedItemIdentifier: containerItemIdentifier)
+                        } else {
+                            // - for a file, instantiate an enumerator that observes changes to the file
+                            maybeEnumerator = DirectoryEnumerator(enumeratedItemIdentifier: containerItemIdentifier)
+                        }
+          
+                    } catch let error {
+                        maybeEnumerator = nil
+                        throw NSError(domain: NSCocoaErrorDomain, code: NSFileNoSuchFileError, userInfo:[:])
+                    }
             }
-        }
-        
-        return storagePathUrl
+            
+            guard let enumerator = maybeEnumerator else {
+            throw NSError(domain: NSCocoaErrorDomain, code: NSFeatureUnsupportedError, userInfo:[:])
+            }
+            return enumerator
     }
-
-
 }
+
