@@ -68,7 +68,7 @@ extern NSString *const flowEndpoint;
 #define k_returnCreateFileText                          6
 
 // Name Default DB
-#define k_databaseDefault                               @"nextcloud.realm"
+#define k_databaseDefault                               @"lawless.realm"
 
 // Intro
 #define k_Intro                                         @"Intro"
@@ -112,7 +112,7 @@ extern NSString *const flowEndpoint;
 
 // Service Key Share
 #define k_serviceShareKeyChain                          @"Crypto Cloud"
-#define k_metadataKeyedUnarchiver                       @"com.lawless.nextcloud.metadata"
+#define k_metadataKeyedUnarchiver                       @"com.lawless.ios.metadata"
 
 // TaskIdentifier
 #define k_taskIdentifierDone                            -1

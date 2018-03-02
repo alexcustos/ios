@@ -513,7 +513,7 @@
 {
     NSString *appVersion = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
     
-    return [NSString stringWithFormat:@"%@%@",@"Mozilla/5.0 (iOS) Nextcloud-iOS/",appVersion];
+    return [NSString stringWithFormat:@"%@%@",@"Mozilla/5.0 (iOS) Lawless-iOS/",appVersion];
 }
 
 + (NSString *)dateDiff:(NSDate *) convertedDate

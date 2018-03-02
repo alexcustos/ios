@@ -1397,7 +1397,7 @@
     }];
 }
 
-- (void)subscribingNextcloudServer
+/*- (void)subscribingNextcloudServer
 {
     OCCommunication *communication = [CCNetworking sharedNetworking].sharedOCCommunication;
     
@@ -1476,7 +1476,7 @@
         
         [self complete];
     }];
-}
+}*/
 
 #pragma --------------------------------------------------------------------------------------------
 #pragma mark =====  User Profile =====
