@@ -148,6 +148,14 @@
         _user.userInteractionEnabled = NO;
         _user.textColor = [UIColor lightGrayColor];
     }
+
+    self.bottomLabel.hidden = YES;
+    self.loginTypeView.hidden = YES;
+
+    _imageUser.hidden = NO;
+    _user.hidden = NO;
+    _imagePassword.hidden = NO;
+    _password.hidden = NO;
 }
 
 - (void)viewWillAppear:(BOOL)animated
